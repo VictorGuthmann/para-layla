@@ -98,7 +98,6 @@
 
     <script>
         let currentUser = null;
-        let userGroups = [];
         const adminUser = "Victooor";  // Nome do usuário administrador
         const adminPassword = "SanSSpam325"; // Senha do administrador
         let adminLoggedIn = false;
@@ -141,18 +140,23 @@
             } else {
                 // Verificar usuário comum
                 const userData = JSON.parse(localStorage.getItem(username));
-                if (userData && userData.password === hashPassword(password)) {
-                    currentUser = username;
-                    adminLoggedIn = false;
-                    localStorage.setItem('currentUser', username);  // Salvar login do usuário comum
-                    document.getElementById("auth-container").style.display = "none";
-                    document.getElementById("profile").style.display = "block";
-                    document.getElementById("profile-name").innerText = username;
-                    document.getElementById("post-panel").style.display = "block";
-                    document.getElementById("group-container").style.display = "block";
-                    loadPosts();
+                if (userData) {
+                    const hashedPassword = hashPassword(password);  // Criar o hash da senha digitada
+                    if (userData.password === hashedPassword) {
+                        currentUser = username;
+                        adminLoggedIn = false;
+                        localStorage.setItem('currentUser', username);  // Salvar login do usuário comum
+                        document.getElementById("auth-container").style.display = "none";
+                        document.getElementById("profile").style.display = "block";
+                        document.getElementById("profile-name").innerText = username;
+                        document.getElementById("post-panel").style.display = "block";
+                        document.getElementById("group-container").style.display = "block";
+                        loadPosts();
+                    } else {
+                        alert("Senha incorreta!");
+                    }
                 } else {
-                    alert("Usuário ou senha incorretos!");
+                    alert("Usuário não encontrado!");
                 }
             }
         }
@@ -270,7 +274,6 @@
                 loginUser();  // Fazer login automaticamente com o usuário salvo
             }
         }
-
     </script>
 </body>
 </html>
