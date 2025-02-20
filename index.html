@@ -52,6 +52,10 @@
         .group-container {
             margin-top: 20px;
         }
+        .admin-panel {
+            margin-top: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -77,6 +81,12 @@
             <button onclick="createGroup()">Criar Grupo</button>
             <button onclick="joinGroup()">Entrar no Grupo</button>
         </div>
+
+        <div class="admin-panel" id="admin-panel" style="display: none;">
+            <h2>Painel Administrativo</h2>
+            <button onclick="manageUsers()">Gerenciar Usuários</button>
+            <button onclick="managePosts()">Gerenciar Postagens</button>
+        </div>
         
         <div class="post-container" id="post-container"></div>
         
@@ -89,6 +99,8 @@
     <script>
         let currentUser = null;
         let userGroups = [];
+        const adminUser = "admin";  // Nome do usuário administrador
+        let adminLoggedIn = false;
 
         // Criptografar a senha
         function hashPassword(password) {
@@ -121,6 +133,14 @@
                 document.getElementById("post-panel").style.display = "block";
                 document.getElementById("group-container").style.display = "block";
                 loadPosts();
+                
+                if (username === adminUser) {
+                    adminLoggedIn = true;
+                    document.getElementById("admin-panel").style.display = "block";  // Mostrar painel administrativo
+                } else {
+                    adminLoggedIn = false;
+                    document.getElementById("admin-panel").style.display = "none";  // Ocultar painel administrativo
+                }
             } else {
                 alert("Usuário ou senha incorretos!");
             }
@@ -129,10 +149,12 @@
         // Logout do usuário
         function logoutUser() {
             currentUser = null;
+            adminLoggedIn = false;
             document.getElementById("auth-container").style.display = "block";
             document.getElementById("profile").style.display = "none";
             document.getElementById("post-panel").style.display = "none";
             document.getElementById("group-container").style.display = "none";
+            document.getElementById("admin-panel").style.display = "none";
             loadPosts();
         }
         
@@ -164,6 +186,13 @@
                             newPost.appendChild(commentSection);
                         }
 
+                        if (adminLoggedIn) {
+                            const deletePostButton = document.createElement("button");
+                            deletePostButton.innerText = "Excluir Postagem";
+                            deletePostButton.onclick = () => deletePost(username, index);
+                            newPost.appendChild(deletePostButton);
+                        }
+
                         postContainer.appendChild(newPost);
                     });
                 }
@@ -193,37 +222,4 @@
             if (commentText) {
                 const commentSection = document.getElementById(`comments-${username}-${postIndex}`);
                 const comment = document.createElement("p");
-                comment.innerHTML = `<strong>${currentUser || 'Visitante'}:</strong> ${commentText}`;
-                commentSection.appendChild(comment);
-                commentInput.value = "";
-            }
-        }
-        
-        // Criar grupo
-        function createGroup() {
-            const groupName = document.getElementById("group-name").value;
-            if (groupName) {
-                const userData = JSON.parse(localStorage.getItem(currentUser));
-                userData.groups.push(groupName);
-                localStorage.setItem(currentUser, JSON.stringify(userData));
-                alert("Grupo criado com sucesso!");
-            }
-        }
-        
-        // Entrar em grupo
-        function joinGroup() {
-            const groupName = document.getElementById("group-name").value;
-            if (groupName) {
-                const userData = JSON.parse(localStorage.getItem(currentUser));
-                if (!userData.groups.includes(groupName)) {
-                    userData.groups.push(groupName);
-                    localStorage.setItem(currentUser, JSON.stringify(userData));
-                    alert("Você entrou no grupo!");
-                } else {
-                    alert("Você já faz parte desse grupo.");
-                }
-            }
-        }
-    </script>
-</body>
-</html>
+                comment.innerHTML = `<strong>${currentUser || 'Visitante'}:</strong> ${comment
