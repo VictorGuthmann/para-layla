@@ -52,6 +52,23 @@
         .group-container {
             margin-top: 20px;
         }
+        .group-list {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .group-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .group-list li {
+            padding: 5px;
+            margin-bottom: 5px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
         .admin-panel {
             margin-top: 20px;
             display: none;
@@ -77,11 +94,19 @@
             <button onclick="logoutUser()">Sair</button>
         </div>
         
-        <!-- Grupo -->
+        <!-- Painel de Grupos -->
         <div class="group-container" id="group-container" style="display: none;">
-            <h2>Criar ou Entrar em Grupos</h2>
+            <h2>Gerenciar Grupos</h2>
             <input type="text" id="group-name" placeholder="Nome do Grupo">
             <button onclick="createGroup()">Criar Grupo</button>
+            <button onclick="joinGroup()">Entrar no Grupo</button>
+
+            <div class="group-list" id="group-list">
+                <h3>Grupos que você está:</h3>
+                <ul id="user-groups">
+                    <!-- Lista de Grupos -->
+                </ul>
+            </div>
         </div>
 
         <!-- Painel Administrativo -->
@@ -140,6 +165,7 @@
                 document.getElementById("group-container").style.display = "block";
                 document.getElementById("admin-panel").style.display = "block";  // Mostrar painel administrativo
                 loadPosts();
+                loadGroups();
             } else {
                 // Verificar usuário comum
                 const userData = JSON.parse(localStorage.getItem(username));
@@ -154,6 +180,7 @@
                         document.getElementById("post-panel").style.display = "block";
                         document.getElementById("group-container").style.display = "block";
                         loadPosts();
+                        loadGroups();
                     } else {
                         alert("Senha incorreta!");
                     }
@@ -201,35 +228,49 @@
                     const userData = JSON.parse(localStorage.getItem(currentUser));
                     userData.posts.push(postContent);
                     localStorage.setItem(currentUser, JSON.stringify(userData));
-                    document.getElementById("post-content").value = "";
                     loadPosts();
-                } else {
-                    alert("Digite algo para postar!");
+                    document.getElementById("post-content").value = "";
                 }
-            } else {
-                alert("Você precisa estar logado para publicar!");
             }
         }
 
-        // Criar grupo
+        // Criar Grupo
         function createGroup() {
             const groupName = document.getElementById("group-name").value;
             if (groupName) {
-                const userData = JSON.parse(localStorage.getItem(currentUser));
+                const userData = JSON.parse(localStorage.getItem(currentUser)) || { posts: [], groups: [] };
                 userData.groups.push(groupName);
                 localStorage.setItem(currentUser, JSON.stringify(userData));
-                alert("Grupo criado!");
+                loadGroups();
             } else {
                 alert("Digite o nome do grupo!");
             }
         }
 
-        // Ao carregar a página, tenta fazer login automaticamente
-        window.onload = function() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                loginUser();
+        // Carregar grupos do usuário
+        function loadGroups() {
+            const userData = JSON.parse(localStorage.getItem(currentUser)) || { groups: [] };
+            const userGroupsList = document.getElementById("user-groups");
+            userGroupsList.innerHTML = "";
+            userData.groups.forEach(group => {
+                const li = document.createElement("li");
+                li.textContent = group;
+                userGroupsList.appendChild(li);
+            });
+        }
+
+        // Entrar no Grupo
+        function joinGroup() {
+            const groupName = document.getElementById("group-name").value;
+            if (groupName) {
+                const userData = JSON.parse(localStorage.getItem(currentUser)) || { posts: [], groups: [] };
+                if (!userData.groups.includes(groupName)) {
+                    userData.groups.push(groupName);
+                    localStorage.setItem(currentUser, JSON.stringify(userData));
+                    loadGroups();
+                } else {
+                    alert("Você já está no grupo!");
+                }
             }
         }
     </script>
