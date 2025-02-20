@@ -65,8 +65,8 @@
         <div class="auth-container" id="auth-container">
             <input type="text" id="username" placeholder="Nome de usuário">
             <input type="password" id="password" placeholder="Senha">
-            <button onclick="loginUser()">Login</button>
             <button onclick="registerUser()">Registrar</button>
+            <button onclick="loginUser()">Login</button>
         </div>
         
         <div class="profile" id="profile" style="display: none;">
@@ -80,7 +80,6 @@
             <input type="text" id="group-name" placeholder="Nome do Grupo">
             <button onclick="createGroup()">Criar Grupo</button>
             <button onclick="joinGroup()">Entrar no Grupo</button>
-            <div id="group-list"></div>
         </div>
 
         <div class="admin-panel" id="admin-panel" style="display: none;">
@@ -100,30 +99,13 @@
     <script>
         let currentUser = null;
         let userGroups = [];
-        const adminUser = "Victooor";  
-        const adminPassword = "SanSSpam325"; 
+        const adminUser = "Victooor";  // Nome do usuário administrador
+        const adminPassword = "SanSSpam325"; // Senha do administrador
         let adminLoggedIn = false;
-
-        // Verifica se há um usuário logado no localStorage ao carregar a página
-        window.onload = function() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                const userData = JSON.parse(localStorage.getItem(currentUser));
-                if (userData) {
-                    document.getElementById("auth-container").style.display = "none";
-                    document.getElementById("profile").style.display = "block";
-                    document.getElementById("profile-name").innerText = currentUser;
-                    document.getElementById("post-panel").style.display = "block";
-                    document.getElementById("group-container").style.display = "block";
-                    loadPosts();
-                }
-            }
-        };
 
         // Criptografar a senha
         function hashPassword(password) {
-            return btoa(password);  
+            return btoa(password);  // Um hash simples base64 para demonstrar, mas deve ser algo mais seguro na prática
         }
 
         // Registrar novo usuário
@@ -138,35 +120,37 @@
                 alert("Preencha todos os campos!");
             }
         }
-        
+
         // Login do usuário
         function loginUser() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
             if (username === adminUser && password === adminPassword) {
+                // Administrador logado
                 currentUser = adminUser;
                 adminLoggedIn = true;
+                localStorage.setItem('currentUser', adminUser);  // Salvar login do administrador
                 document.getElementById("auth-container").style.display = "none";
                 document.getElementById("profile").style.display = "block";
                 document.getElementById("profile-name").innerText = username;
                 document.getElementById("post-panel").style.display = "block";
                 document.getElementById("group-container").style.display = "block";
-                document.getElementById("admin-panel").style.display = "block";
+                document.getElementById("admin-panel").style.display = "block";  // Mostrar painel administrativo
                 loadPosts();
-                localStorage.setItem('currentUser', username);
             } else {
+                // Verificar usuário comum
                 const userData = JSON.parse(localStorage.getItem(username));
                 if (userData && userData.password === hashPassword(password)) {
                     currentUser = username;
                     adminLoggedIn = false;
+                    localStorage.setItem('currentUser', username);  // Salvar login do usuário comum
                     document.getElementById("auth-container").style.display = "none";
                     document.getElementById("profile").style.display = "block";
                     document.getElementById("profile-name").innerText = username;
                     document.getElementById("post-panel").style.display = "block";
                     document.getElementById("group-container").style.display = "block";
                     loadPosts();
-                    localStorage.setItem('currentUser', username);
                 } else {
                     alert("Usuário ou senha incorretos!");
                 }
@@ -177,7 +161,7 @@
         function logoutUser() {
             currentUser = null;
             adminLoggedIn = false;
-            localStorage.removeItem('currentUser');
+            localStorage.removeItem('currentUser');  // Remover o usuário logado do localStorage
             document.getElementById("auth-container").style.display = "block";
             document.getElementById("profile").style.display = "none";
             document.getElementById("post-panel").style.display = "none";
@@ -191,22 +175,102 @@
             const postContainer = document.getElementById("post-container");
             postContainer.innerHTML = "";
             Object.keys(localStorage).forEach(username => {
-                if (username !== 'currentUser') {
-                    const userData = JSON.parse(localStorage.getItem(username));
-                    if (userData.posts) {
-                        userData.posts.forEach((content, index) => {
-                            const newPost = document.createElement("div");
-                            newPost.className = "post";
-                            newPost.innerHTML = `<strong>${username}</strong>: ${content}<br>`;
-                            
-                            if (currentUser) {
-                                const commentSection = document.createElement("div");
-                                commentSection.className = "comment-section";
-                                commentSection.innerHTML = `
-                                    <input type='text' id='comment-${username}-${index}' placeholder='Comente...'>
-                                    <button onclick='addComment("${username}", ${index})'>Comentar</button>
-                                    <div id='comments-${username}-${index}'></div>
-                                `;
-                                newPost.appendChild(commentSection);
-                            } else {
-                                const commentSection
+                const userData = JSON.parse(localStorage.getItem(username));
+                if (userData.posts) {
+                    userData.posts.forEach((content, index) => {
+                        const newPost = document.createElement("div");
+                        newPost.className = "post";
+                        newPost.innerHTML = `<strong>${username}</strong>: ${content}<br>`;
+
+                        if (currentUser) {
+                            const commentSection = document.createElement("div");
+                            commentSection.className = "comment-section";
+                            commentSection.innerHTML = `
+                                <input type='text' id='comment-${username}-${index}' placeholder='Comente...'>
+                                <button onclick='addComment("${username}", ${index})'>Comentar</button>
+                                <div id='comments-${username}-${index}'></div>
+                            `;
+                            newPost.appendChild(commentSection);
+                        } else {
+                            const commentSection = document.createElement("div");
+                            commentSection.className = "comment-section";
+                            commentSection.innerHTML = `<p>Você precisa estar logado para comentar.</p>`;
+                            newPost.appendChild(commentSection);
+                        }
+
+                        if (adminLoggedIn) {
+                            const deletePostButton = document.createElement("button");
+                            deletePostButton.innerText = "Excluir Postagem";
+                            deletePostButton.onclick = () => deletePost(username, index);
+                            newPost.appendChild(deletePostButton);
+                        }
+
+                        postContainer.appendChild(newPost);
+                    });
+                }
+            });
+        }
+
+        // Adicionar postagem
+        function addPost() {
+            if (currentUser) {
+                const postContent = document.getElementById("post-content").value;
+                if (postContent) {
+                    const userData = JSON.parse(localStorage.getItem(currentUser));
+                    userData.posts.push(postContent);
+                    localStorage.setItem(currentUser, JSON.stringify(userData));
+                    document.getElementById("post-content").value = "";
+                    loadPosts();
+                } else {
+                    alert("Digite algo para postar!");
+                }
+            } else {
+                alert("Você precisa estar logado para publicar!");
+            }
+        }
+
+        // Excluir postagem
+        function deletePost(username, index) {
+            const userData = JSON.parse(localStorage.getItem(username));
+            userData.posts.splice(index, 1);
+            localStorage.setItem(username, JSON.stringify(userData));
+            loadPosts();
+        }
+
+        // Criar grupo
+        function createGroup() {
+            const groupName = document.getElementById("group-name").value;
+            if (groupName) {
+                const userData = JSON.parse(localStorage.getItem(currentUser));
+                userData.groups.push(groupName);
+                localStorage.setItem(currentUser, JSON.stringify(userData));
+                alert("Grupo criado!");
+                loadGroups();
+            }
+        }
+
+        // Mostrar grupos
+        function loadGroups() {
+            const groupList = document.getElementById("group-list");
+            groupList.innerHTML = '';
+            const userData = JSON.parse(localStorage.getItem(currentUser));
+            if (userData && userData.groups) {
+                userData.groups.forEach(group => {
+                    const groupItem = document.createElement("div");
+                    groupItem.innerText = group;
+                    groupList.appendChild(groupItem);
+                });
+            }
+        }
+
+        window.onload = function() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                loginUser();  // Fazer login automaticamente com o usuário salvo
+            }
+        }
+
+    </script>
+</body>
+</html>
