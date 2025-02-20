@@ -65,8 +65,8 @@
         <div class="auth-container" id="auth-container">
             <input type="text" id="username" placeholder="Nome de usuário">
             <input type="password" id="password" placeholder="Senha">
-            <button onclick="registerUser()">Registrar</button>
             <button onclick="loginUser()">Login</button>
+            <button onclick="registerUser()">Registrar</button>
         </div>
         
         <div class="profile" id="profile" style="display: none;">
@@ -104,10 +104,29 @@
         const adminPassword = "SanSSpam325"; 
         let adminLoggedIn = false;
 
+        // Verifica se há um usuário logado no localStorage ao carregar a página
+        window.onload = function() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                const userData = JSON.parse(localStorage.getItem(currentUser));
+                if (userData) {
+                    document.getElementById("auth-container").style.display = "none";
+                    document.getElementById("profile").style.display = "block";
+                    document.getElementById("profile-name").innerText = currentUser;
+                    document.getElementById("post-panel").style.display = "block";
+                    document.getElementById("group-container").style.display = "block";
+                    loadPosts();
+                }
+            }
+        };
+
+        // Criptografar a senha
         function hashPassword(password) {
             return btoa(password);  
         }
 
+        // Registrar novo usuário
         function registerUser() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
@@ -120,6 +139,7 @@
             }
         }
         
+        // Login do usuário
         function loginUser() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
@@ -134,6 +154,7 @@
                 document.getElementById("group-container").style.display = "block";
                 document.getElementById("admin-panel").style.display = "block";
                 loadPosts();
+                localStorage.setItem('currentUser', username);
             } else {
                 const userData = JSON.parse(localStorage.getItem(username));
                 if (userData && userData.password === hashPassword(password)) {
@@ -145,15 +166,18 @@
                     document.getElementById("post-panel").style.display = "block";
                     document.getElementById("group-container").style.display = "block";
                     loadPosts();
+                    localStorage.setItem('currentUser', username);
                 } else {
                     alert("Usuário ou senha incorretos!");
                 }
             }
         }
 
+        // Logout do usuário
         function logoutUser() {
             currentUser = null;
             adminLoggedIn = false;
+            localStorage.removeItem('currentUser');
             document.getElementById("auth-container").style.display = "block";
             document.getElementById("profile").style.display = "none";
             document.getElementById("post-panel").style.display = "none";
@@ -162,66 +186,27 @@
             loadPosts();
         }
 
+        // Carregar postagens de todos os usuários
         function loadPosts() {
             const postContainer = document.getElementById("post-container");
             postContainer.innerHTML = "";
             Object.keys(localStorage).forEach(username => {
-                const userData = JSON.parse(localStorage.getItem(username));
-                if (userData.posts) {
-                    userData.posts.forEach((content, index) => {
-                        const newPost = document.createElement("div");
-                        newPost.className = "post";
-                        newPost.innerHTML = `<strong>${username}</strong>: ${content}<br>`;
-                        
-                        if (currentUser) {
-                            const commentSection = document.createElement("div");
-                            commentSection.className = "comment-section";
-                            commentSection.innerHTML = `
-                                <input type='text' id='comment-${username}-${index}' placeholder='Comente...'>
-                                <button onclick='addComment("${username}", ${index})'>Comentar</button>
-                                <div id='comments-${username}-${index}'></div>
-                            `;
-                            newPost.appendChild(commentSection);
-                        } else {
-                            const commentSection = document.createElement("div");
-                            commentSection.className = "comment-section";
-                            commentSection.innerHTML = `<p>Você precisa estar logado para comentar.</p>`;
-                            newPost.appendChild(commentSection);
-                        }
-
-                        if (adminLoggedIn) {
-                            const deletePostButton = document.createElement("button");
-                            deletePostButton.innerText = "Excluir Postagem";
-                            deletePostButton.onclick = () => deletePost(username, index);
-                            newPost.appendChild(deletePostButton);
-                        }
-
-                        postContainer.appendChild(newPost);
-                    });
-                }
-            });
-        }
-
-        function addPost() {
-            if (currentUser) {
-                const content = document.getElementById("post-content").value;
-                if (content) {
-                    const userData = JSON.parse(localStorage.getItem(currentUser));
-                    userData.posts.push(content);
-                    localStorage.setItem(currentUser, JSON.stringify(userData));
-                    loadPosts();
-                    document.getElementById("post-content").value = "";
-                }
-            } else {
-                alert("Você precisa estar logado para postar!");
-            }
-        }
-
-        function addComment(username, postIndex) {
-            const commentInput = document.getElementById(`comment-${username}-${postIndex}`);
-            const commentText = commentInput.value;
-            if (commentText) {
-                const commentSection = document.getElementById(`comments-${username}-${postIndex}`);
-                const comment = document.createElement("p");
-                comment.innerHTML = `<strong>${currentUser || 'Visitante'}:</strong> ${commentText}`;
-                commentSection.appendChild
+                if (username !== 'currentUser') {
+                    const userData = JSON.parse(localStorage.getItem(username));
+                    if (userData.posts) {
+                        userData.posts.forEach((content, index) => {
+                            const newPost = document.createElement("div");
+                            newPost.className = "post";
+                            newPost.innerHTML = `<strong>${username}</strong>: ${content}<br>`;
+                            
+                            if (currentUser) {
+                                const commentSection = document.createElement("div");
+                                commentSection.className = "comment-section";
+                                commentSection.innerHTML = `
+                                    <input type='text' id='comment-${username}-${index}' placeholder='Comente...'>
+                                    <button onclick='addComment("${username}", ${index})'>Comentar</button>
+                                    <div id='comments-${username}-${index}'></div>
+                                `;
+                                newPost.appendChild(commentSection);
+                            } else {
+                                const commentSection
