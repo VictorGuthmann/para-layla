@@ -69,8 +69,8 @@
         <div class="auth-container" id="auth-container">
             <input type="text" id="username" placeholder="Nome de usuário">
             <input type="password" id="password" placeholder="Senha">
-            <button onclick="registerUser()">Registrar</button>
             <button onclick="loginUser()">Login</button>
+            <button onclick="registerUser()">Registrar</button>
         </div>
         
         <div class="profile" id="profile" style="display: none;">
@@ -246,7 +246,7 @@
             loadPosts();
         }
 
-        // Função para criar grupo
+        // Criar grupo
         function createGroup() {
             const groupName = document.getElementById("group-name").value;
             if (groupName && !userGroups.includes(groupName)) {
@@ -256,7 +256,7 @@
             }
         }
 
-        // Função para entrar em um grupo
+        // Entrar no grupo
         function joinGroup() {
             const groupName = document.getElementById("group-name").value;
             if (groupName && !userGroups.includes(groupName)) {
@@ -266,7 +266,7 @@
             }
         }
 
-        // Exibir grupos do usuário
+        // Exibir grupos
         function displayGroups() {
             const groupContainer = document.getElementById("user-groups");
             groupContainer.innerHTML = "<h3>Grupos:</h3>";
@@ -276,7 +276,6 @@
                 groupContainer.appendChild(groupElement);
             });
         }
-
     </script>
 </body>
 </html>
