@@ -80,6 +80,7 @@
             <input type="text" id="group-name" placeholder="Nome do Grupo">
             <button onclick="createGroup()">Criar Grupo</button>
             <button onclick="joinGroup()">Entrar no Grupo</button>
+            <div id="group-list"></div>
         </div>
 
         <div class="admin-panel" id="admin-panel" style="display: none;">
@@ -99,16 +100,14 @@
     <script>
         let currentUser = null;
         let userGroups = [];
-        const adminUser = "Victooor";  // Nome do usuário administrador
-        const adminPassword = "SanSSpam325"; // Senha do administrador
+        const adminUser = "Victooor";  
+        const adminPassword = "SanSSpam325"; 
         let adminLoggedIn = false;
 
-        // Criptografar a senha
         function hashPassword(password) {
-            return btoa(password);  // Um hash simples base64 para demonstrar, mas deve ser algo mais seguro na prática
+            return btoa(password);  
         }
 
-        // Registrar novo usuário
         function registerUser() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
@@ -121,13 +120,11 @@
             }
         }
         
-        // Login do usuário
         function loginUser() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
             if (username === adminUser && password === adminPassword) {
-                // Administrador logado
                 currentUser = adminUser;
                 adminLoggedIn = true;
                 document.getElementById("auth-container").style.display = "none";
@@ -135,10 +132,9 @@
                 document.getElementById("profile-name").innerText = username;
                 document.getElementById("post-panel").style.display = "block";
                 document.getElementById("group-container").style.display = "block";
-                document.getElementById("admin-panel").style.display = "block";  // Mostrar painel administrativo
+                document.getElementById("admin-panel").style.display = "block";
                 loadPosts();
             } else {
-                // Verificar usuário comum
                 const userData = JSON.parse(localStorage.getItem(username));
                 if (userData && userData.password === hashPassword(password)) {
                     currentUser = username;
@@ -155,7 +151,6 @@
             }
         }
 
-        // Logout do usuário
         function logoutUser() {
             currentUser = null;
             adminLoggedIn = false;
@@ -166,8 +161,7 @@
             document.getElementById("admin-panel").style.display = "none";
             loadPosts();
         }
-        
-        // Carregar postagens de todos os usuários
+
         function loadPosts() {
             const postContainer = document.getElementById("post-container");
             postContainer.innerHTML = "";
@@ -207,8 +201,7 @@
                 }
             });
         }
-        
-        // Adicionar postagem
+
         function addPost() {
             if (currentUser) {
                 const content = document.getElementById("post-content").value;
@@ -223,8 +216,7 @@
                 alert("Você precisa estar logado para postar!");
             }
         }
-        
-        // Adicionar comentário
+
         function addComment(username, postIndex) {
             const commentInput = document.getElementById(`comment-${username}-${postIndex}`);
             const commentText = commentInput.value;
@@ -232,17 +224,4 @@
                 const commentSection = document.getElementById(`comments-${username}-${postIndex}`);
                 const comment = document.createElement("p");
                 comment.innerHTML = `<strong>${currentUser || 'Visitante'}:</strong> ${commentText}`;
-                commentSection.appendChild(comment);
-            }
-        }
-        
-        // Excluir postagem (apenas para admin)
-        function deletePost(username, postIndex) {
-            const userData = JSON.parse(localStorage.getItem(username));
-            userData.posts.splice(postIndex, 1);
-            localStorage.setItem(username, JSON.stringify(userData));
-            loadPosts();
-        }
-    </script>
-</body>
-</html>
+                commentSection.appendChild
