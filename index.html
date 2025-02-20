@@ -99,7 +99,8 @@
     <script>
         let currentUser = null;
         let userGroups = [];
-        const adminUser = "admin";  // Nome do usuário administrador
+        const adminUser = "Victooor";  // Nome do usuário administrador
+        const adminPassword = "SanSSpam325"; // Senha do administrador
         let adminLoggedIn = false;
 
         // Criptografar a senha
@@ -124,25 +125,33 @@
         function loginUser() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
-            const userData = JSON.parse(localStorage.getItem(username));
-            if (userData && userData.password === hashPassword(password)) {
-                currentUser = username;
+
+            if (username === adminUser && password === adminPassword) {
+                // Administrador logado
+                currentUser = adminUser;
+                adminLoggedIn = true;
                 document.getElementById("auth-container").style.display = "none";
                 document.getElementById("profile").style.display = "block";
                 document.getElementById("profile-name").innerText = username;
                 document.getElementById("post-panel").style.display = "block";
                 document.getElementById("group-container").style.display = "block";
+                document.getElementById("admin-panel").style.display = "block";  // Mostrar painel administrativo
                 loadPosts();
-                
-                if (username === adminUser) {
-                    adminLoggedIn = true;
-                    document.getElementById("admin-panel").style.display = "block";  // Mostrar painel administrativo
-                } else {
-                    adminLoggedIn = false;
-                    document.getElementById("admin-panel").style.display = "none";  // Ocultar painel administrativo
-                }
             } else {
-                alert("Usuário ou senha incorretos!");
+                // Verificar usuário comum
+                const userData = JSON.parse(localStorage.getItem(username));
+                if (userData && userData.password === hashPassword(password)) {
+                    currentUser = username;
+                    adminLoggedIn = false;
+                    document.getElementById("auth-container").style.display = "none";
+                    document.getElementById("profile").style.display = "block";
+                    document.getElementById("profile-name").innerText = username;
+                    document.getElementById("post-panel").style.display = "block";
+                    document.getElementById("group-container").style.display = "block";
+                    loadPosts();
+                } else {
+                    alert("Usuário ou senha incorretos!");
+                }
             }
         }
 
@@ -222,4 +231,18 @@
             if (commentText) {
                 const commentSection = document.getElementById(`comments-${username}-${postIndex}`);
                 const comment = document.createElement("p");
-                comment.innerHTML = `<strong>${currentUser || 'Visitante'}:</strong> ${comment
+                comment.innerHTML = `<strong>${currentUser || 'Visitante'}:</strong> ${commentText}`;
+                commentSection.appendChild(comment);
+            }
+        }
+        
+        // Excluir postagem (apenas para admin)
+        function deletePost(username, postIndex) {
+            const userData = JSON.parse(localStorage.getItem(username));
+            userData.posts.splice(postIndex, 1);
+            localStorage.setItem(username, JSON.stringify(userData));
+            loadPosts();
+        }
+    </script>
+</body>
+</html>
