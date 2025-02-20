@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rede Social - Para Layla</title>
+    <style>
+        body {
+            background-color: #FFC0CB;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            color: #D63384;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 28px;
+        }
+        .post-container {
+            margin-top: 20px;
+        }
+        .post {
+            background: #FFD1DC;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .auth-container {
+            margin-bottom: 20px;
+        }
+        .profile {
+            margin-top: 20px;
+        }
+        .profile img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        .comment-section {
+            margin-top: 10px;
+            background: #fff;
+            padding: 5px;
+            border-radius: 10px;
+        }
+        .group-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rede Social para Layla 💖</h1>
+        
+        <div class="auth-container" id="auth-container">
+            <input type="text" id="username" placeholder="Nome de usuário">
+            <input type="password" id="password" placeholder="Senha">
+            <button onclick="registerUser()">Registrar</button>
+            <button onclick="loginUser()">Login</button>
+        </div>
+        
+        <div class="profile" id="profile" style="display: none;">
+            <p>Bem-vindo, <span id="profile-name"></span>!</p>
+            <img id="profile-pic" src="https://via.placeholder.com/50" alt="Foto de perfil">
+            <button onclick="logoutUser()">Sair</button>
+        </div>
+        
+        <div class="group-container" id="group-container" style="display: none;">
+            <h2>Criar ou Entrar em Grupos</h2>
+            <input type="text" id="group-name" placeholder="Nome do Grupo">
+            <button onclick="createGroup()">Criar Grupo</button>
+            <button onclick="joinGroup()">Entrar no Grupo</button>
+        </div>
+        
+        <div class="post-container" id="post-container"></div>
+        
+        <div id="post-panel" style="display: none;">
+            <textarea id="post-content" placeholder="Escreva sua postagem..."></textarea>
+            <button onclick="addPost()">Publicar</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let userGroups = [];
+
+        // Criptografar a senha
+        function hashPassword(password) {
+            return btoa(password);  // Um hash simples base64 para demonstrar, mas deve ser algo mais seguro na prática
+        }
+
+        // Registrar novo usuário
+        function registerUser() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            if (username && password) {
+                const hashedPassword = hashPassword(password);
+                localStorage.setItem(username, JSON.stringify({ password: hashedPassword, posts: [], friends: [], groups: [] }));
+                alert("Usuário registrado!");
+            } else {
+                alert("Preencha todos os campos!");
+            }
+        }
+        
+        // Login do usuário
+        function loginUser() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const userData = JSON.parse(localStorage.getItem(username));
+            if (userData && userData.password === hashPassword(password)) {
+                currentUser = username;
+                document.getElementById("auth-container").style.display = "none";
+                document.getElementById("profile").style.display = "block";
+                document.getElementById("profile-name").innerText = username;
+                document.getElementById("post-panel").style.display = "block";
+                document.getElementById("group-container").style.display = "block";
+                loadPosts();
+            } else {
+                alert("Usuário ou senha incorretos!");
+            }
+        }
+
+        // Logout do usuário
+        function logoutUser() {
+            currentUser = null;
+            document.getElementById("auth-container").style.display = "block";
+            document.getElementById("profile").style.display = "none";
+            document.getElementById("post-panel").style.display = "none";
+            document.getElementById("group-container").style.display = "none";
+            loadPosts();
+        }
+        
+        // Carregar postagens de todos os usuários
+        function loadPosts() {
+            const postContainer = document.getElementById("post-container");
+            postContainer.innerHTML = "";
+            Object.keys(localStorage).forEach(username => {
+                const userData = JSON.parse(localStorage.getItem(username));
+                if (userData.posts) {
+                    userData.posts.forEach((content, index) => {
+                        const newPost = document.createElement("div");
+                        newPost.className = "post";
+                        newPost.innerHTML = `<strong>${username}</strong>: ${content}<br>`;
+                        
+                        if (currentUser) {
+                            const commentSection = document.createElement("div");
+                            commentSection.className = "comment-section";
+                            commentSection.innerHTML = `
+                                <input type='text' id='comment-${username}-${index}' placeholder='Comente...'>
+                                <button onclick='addComment("${username}", ${index})'>Comentar</button>
+                                <div id='comments-${username}-${index}'></div>
+                            `;
+                            newPost.appendChild(commentSection);
+                        } else {
+                            const commentSection = document.createElement("div");
+                            commentSection.className = "comment-section";
+                            commentSection.innerHTML = `<p>Você precisa estar logado para comentar.</p>`;
+                            newPost.appendChild(commentSection);
+                        }
+
+                        postContainer.appendChild(newPost);
+                    });
+                }
+            });
+        }
+        
+        // Adicionar postagem
+        function addPost() {
+            if (currentUser) {
+                const content = document.getElementById("post-content").value;
+                if (content) {
+                    const userData = JSON.parse(localStorage.getItem(currentUser));
+                    userData.posts.push(content);
+                    localStorage.setItem(currentUser, JSON.stringify(userData));
+                    loadPosts();
+                    document.getElementById("post-content").value = "";
+                }
+            } else {
+                alert("Você precisa estar logado para postar!");
+            }
+        }
+        
+        // Adicionar comentário
+        function addComment(username, postIndex) {
+            const commentInput = document.getElementById(`comment-${username}-${postIndex}`);
+            const commentText = commentInput.value;
+            if (commentText) {
+                const commentSection = document.getElementById(`comments-${username}-${postIndex}`);
+                const comment = document.createElement("p");
+                comment.innerHTML = `<strong>${currentUser || 'Visitante'}:</strong> ${commentText}`;
+                commentSection.appendChild(comment);
+                commentInput.value = "";
+            }
+        }
+        
+        // Criar grupo
+        function createGroup() {
+            const groupName = document.getElementById("group-name").value;
+            if (groupName) {
+                const userData = JSON.parse(localStorage.getItem(currentUser));
+                userData.groups.push(groupName);
+                localStorage.setItem(currentUser, JSON.stringify(userData));
+                alert("Grupo criado com sucesso!");
+            }
+        }
+        
+        // Entrar em grupo
+        function joinGroup() {
+            const groupName = document.getElementById("group-name").value;
+            if (groupName) {
+                const userData = JSON.parse(localStorage.getItem(currentUser));
+                if (!userData.groups.includes(groupName)) {
+                    userData.groups.push(groupName);
+                    localStorage.setItem(currentUser, JSON.stringify(userData));
+                    alert("Você entrou no grupo!");
+                } else {
+                    alert("Você já faz parte desse grupo.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+
